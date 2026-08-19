@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Converter</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at 15% 20%, rgba(139, 92, 246, 0.35), transparent 30%),
+                radial-gradient(circle at 85% 80%, rgba(6, 182, 212, 0.3), transparent 30%),
+                linear-gradient(135deg, #0f172a, #1e1b4b 50%, #0f172a);
+            color: #fff;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 720px;
+            padding: 42px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+        }
+
+        .icon {
+            width: 58px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 22px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.35);
+            font-size: 27px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 750;
+            letter-spacing: -0.8px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #cbd5e1;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 10px;
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        textarea {
+            width: 100%;
+            height: 155px;
+            padding: 16px;
+            resize: vertical;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            outline: none;
+            background: rgba(15, 23, 42, 0.65);
+            color: #f8fafc;
+            font-family: "SFMono-Regular", Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            transition: 0.25s ease;
+        }
+
+        textarea::placeholder {
+            color: #64748b;
+        }
+
+        textarea:focus {
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
+        }
+
+        button {
+            width: 100%;
+            margin-top: 18px;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 10px 25px rgba(6, 182, 212, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.35);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #message {
+            min-height: 24px;
+            margin-top: 16px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .error {
+            color: #fb7185;
+        }
+
+        .success {
+            color: #34d399;
+        }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 28px 22px;
+                border-radius: 20px;
+            }
+
+            h1 {
+                font-size: 27px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <div class="icon">↗</div>
+
+    <h1>URL Converter</h1>
+
+    <p class="subtitle">
+        Paste a Microsoft SafeLinks URL below. The original destination
+        will be extracted, converted to the admin domain, and opened automatically.
+    </p>
+
+    <label class="label" for="inputUrl">SafeLinks URL</label>
+
+    <textarea
+        id="inputUrl"
+        placeholder="https://eur02.safelinks.protection.outlook.com/?url=..."
+    ></textarea>
+
+    <button onclick="convertAndOpen()">
+        Convert & Open →
+    </button>
+
+    <div id="message"></div>
+
+    <div class="footer">
+        Secure client-side URL conversion
+    </div>
+
+</div>
+
+<script>
+function convertAndOpen() {
+    const input = document.getElementById("inputUrl").value.trim();
+    const message = document.getElementById("message");
+
+    message.textContent = "";
+    message.className = "";
+
+    if (!input) {
+        message.className = "error";
+        message.textContent = "Please paste a SafeLinks URL.";
+        return;
+    }
+
+    try {
+        const safeLinksUrl = new URL(input);
+        const originalUrl = safeLinksUrl.searchParams.get("url");
+
+        if (!originalUrl) {
+            throw new Error("No destination URL was found.");
+        }
+
+        const convertedUrl = originalUrl.replace(
+            /^https?:\/\/incorporateweb\.co\.uk/i,
+            "https://admin.incorporateweb.co.uk"
+        );
+
+        if (!convertedUrl.startsWith("https://admin.incorporateweb.co.uk")) {
+            throw new Error("The URL does not match the expected domain.");
+        }
+
+        message.className = "success";
+        message.textContent = "Opening destination...";
+
+        window.location.href = convertedUrl;
+
+    } catch (error) {
+        message.className = "error";
+        message.textContent = error.message;
+    }
+}
+</script>
+
+</body>
+</html>
