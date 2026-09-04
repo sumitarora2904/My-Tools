@@ -88,6 +88,13 @@
 </div>
 
 <script>
+function cleanValue(val) {
+    if (!val) return "";
+    return val.toString()
+              .replace(/^[\ufeff\s"']+|[\ufeff\s"']+$/g, '')
+              .toLowerCase();
+}
+
 function processAndDownload() {
     const fileInput = document.getElementById('csvFileInput');
     const empArrayText = document.getElementById('empArrayInput').value;
@@ -103,12 +110,21 @@ function processAndDownload() {
         return;
     }
 
-    const empSet = new Set(empArrayText.split(/\r?\n/).map(e => e.trim()).filter(e => e));
+    const empSet = new Set(
+        empArrayText.split(/\r?\n/)
+            .map(e => cleanValue(e))
+            .filter(e => e.length > 0)
+    );
 
     const reader = new FileReader();
     
     reader.onload = function(event) {
-        const fileContent = event.target.result;
+        let fileContent = event.target.result;
+        
+        if (fileContent.charCodeAt(0) === 0xFEFF) {
+            fileContent = fileContent.slice(1);
+        }
+
         const lines = fileContent.split(/\r?\n/).filter(line => line.trim() !== "");
         
         if (lines.length === 0) {
@@ -117,14 +133,14 @@ function processAndDownload() {
         }
 
         const headers = parseCSVLine(lines[0]);
-        const empIndex = headers.findIndex(h => h.toLowerCase() === 'employeeno');
+        const empIndex = headers.findIndex(h => cleanValue(h) === 'employeeno');
 
         if (empIndex === -1) {
-            alert("Could not find the 'EmployeeNo' column in the CSV.");
+            alert(`Could not find the 'EmployeeNo' column.\nFound columns: ${headers.join(', ')}`);
             return;
         }
 
-        const lowerHeaders = headers.map(h => h.toLowerCase());
+        const lowerHeaders = headers.map(h => cleanValue(h));
         lowerHeaders.unshift("client_name");
 
         const outputLines = [];
@@ -132,7 +148,8 @@ function processAndDownload() {
 
         for (let i = 1; i < lines.length; i++) {
             const rowData = parseCSVLine(lines[i]);
-            const currentEmpNo = rowData[empIndex] ? rowData[empIndex].trim() : "";
+            const rawEmpNo = rowData[empIndex] ? rowData[empIndex] : "";
+            const currentEmpNo = cleanValue(rawEmpNo);
 
             if (empSet.has(currentEmpNo)) {
                 rowData.unshift(clientName);
