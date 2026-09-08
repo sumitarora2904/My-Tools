@@ -1,5 +1,4 @@
-{
-    "clients": [
+[
         {
             "id": 1,
             "active": true,
@@ -5999,4 +5998,3 @@
             "display_name": "XPO - XPO"
         }
     ]
-}
